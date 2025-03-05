@@ -1,0 +1,24 @@
+{
+  "name": "nspanel",
+  "version": "1.0.0",
+  "description": "",
+  "source": "src/index.js",
+  "module": "dist/card.js",
+  "targets": {
+    "module": {
+      "includeNodeModules": true
+    }
+  },
+  "scripts": {
+    "watch": "parcel watch",
+    "build": "parcel build"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^2.13.3"
+  },
+  "dependencies": {
+    "lit": "^3.2.1"
+  }
+}
