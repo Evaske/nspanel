@@ -11,6 +11,7 @@ export class Card extends LitElement {
   render() {
     return html`
       <div class="nspanel-card">
+        <div class="time">${this.getTime(this.hass.states['sensor.time'].state)}</div>
         <div class="grid">
           ${this.config.rooms.map((room) => {  
             return html`
@@ -20,6 +21,18 @@ export class Card extends LitElement {
         </div>
       </div>
     `
+  }
+
+  /**
+   * Convert a time string of the form "HH:MM" to a human-readable
+   * 24-hour time with AM/PM indicator.
+   * @param {string} time - Time string in 24-hour format
+   * @returns {string} Time string in 24-hour format with AM/PM
+   */
+  getTime(time) {
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours < 12 ? " AM" : " PM";
+    return `${hours % 12 || 12}:${minutes} ${period}`;
   }
 
   setConfig(config) {
@@ -39,6 +52,7 @@ export class Card extends LitElement {
 
         --nspanel-font-light: 300;
         --nspanel-font-normal: 400;
+        --nspanel-font-medium: 500;
         --nspanel-font-bold: 600;
 
         background: var(--nspanel-surface-primary);
@@ -60,6 +74,13 @@ export class Card extends LitElement {
         flex-direction: column;
         flex: 1;
         height: 100%;
+      }
+
+      .time {
+        color: var(--nspanel-content-primary);
+        font-size: 14px;
+        font-weight: var(--nspanel-font-medium);
+        margin-bottom: 24px;
       }
       
       .grid {
