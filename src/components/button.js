@@ -34,7 +34,7 @@ export class Button extends LitElement {
 
   static get styles() {
     return css`
-      :host {
+      .nspanel-button {
         align-items: space-between;
         background: var(--nspanel-surface-secondary);
         border-radius: 8px;
@@ -43,15 +43,10 @@ export class Button extends LitElement {
         display: flex;
         flex-direction: column;
         flex: 1;
+        justify-content: space-between;
         height: 100px;
         padding: 12px;
-      }
-
-      .nspanel-button {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        justify-content: space-between;
+        -webkit-tap-highlight-color: transparent;
 
         &:hover {
           cursor: pointer;
