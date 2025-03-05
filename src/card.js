@@ -48,11 +48,11 @@ export class Card extends LitElement {
         font-optical-sizing: auto;
         font-weight: 400;
         font-style: normal;
-        height: 480px;
+        height: 100%;
         line-height: normal;
         margin: 0 auto;
         padding: 24px;
-        width: 480px;
+        width: 100%;
       }
 
       .nspanel-card {
