@@ -8,7 +8,7 @@ function loadCSS(url) {
   document.head.appendChild(link);
 }
 
-loadCSS("https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap");
+loadCSS("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap");
 
 window.customCards = window.customCards || [];
 window.customCards.push({
