@@ -10,7 +10,7 @@ export class TrackInfo extends LitElement {
     const { state, attributes } = this.hass.states['media_player.amplifier'];
     return html`
       <div class="nspanel-track-info">
-        <img src=${attributes.entity_picture} />
+        ${attributes.entity_picture ? html`<img src=${attributes.entity_picture} />` : ''}
         <div class="track-info">
           <div class="title">${attributes.media_title}</div>
           <div class="artist">${attributes.media_artist}</div>

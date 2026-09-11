@@ -6,6 +6,12 @@ import { TrackInfo } from './components/track-info';
 import { TrackPositionSlider } from './components/track-position-slider';
 import { VolumeControl } from './components/volume-control';
 import { MediaControl } from './components/media-control';
+import { WaterStatus, timerStatus } from './components/water-status';
+
+const WATER_SWITCHES = [
+  { name: 'Lawn Sprinklers', icon: 'mdi:sprinkler-variant', entity: 'switch.water_timer_1', timer: 1 },
+  { name: 'Garden Hose', icon: 'mdi:water-pump', entity: 'switch.water_timer_2', timer: 2 },
+];
 
 export class Card extends LitElement {
   static get properties() {
@@ -22,18 +28,19 @@ export class Card extends LitElement {
   }
 
   render() {
+    const water = this.activeTab === 'water';
     return html`
-      <div class="nspanel-card">
+      <div class="nspanel-card ${water ? 'nspanel-card--water' : ''}">
         <div class="top-section">
           <div class="header">
             <div class="time">${this.getTime(this.hass.states['sensor.time'].state)}</div>
             <div class="tabs">
-              <nspanel-button text="Music" active=${this.activeTab === 'music'} icon="speaker"></nspanel-button>
-              <nspanel-button text="Lights" icon="lightbulb" active=${this.activeTab === 'lights'}></nspanel-button>
+              <nspanel-button text="Music" active=${!water} icon="speaker" @click=${() => this.activeTab = 'music'}></nspanel-button>
+              <nspanel-button text="Water" active=${water} icon="sprinkler-variant" @click=${() => this.activeTab = 'water'}></nspanel-button>
             </div>
           </div>
           <div class="button-card-grid">
-            ${this.config.rooms.map((room) => {
+            ${water ? this.renderWaterCards() : this.config.rooms.map((room) => {
               return html`
                 <nspanel-button-card
                   hass=${this.hass}
@@ -44,24 +51,55 @@ export class Card extends LitElement {
           </div>
         </div>
         <div class="bottom-section">
-          <nspanel-track-info hass=${this.hass}></nspanel-track-info>
-          <nspanel-media-control hass=${this.hass}></nspanel-media-control>
-          <nspanel-volume-control hass=${this.hass}></nspanel-volume-control>
+          ${water ? html`
+            <nspanel-water-status hass=${this.hass}></nspanel-water-status>
+          ` : html`
+            <nspanel-track-info hass=${this.hass}></nspanel-track-info>
+            <nspanel-media-control hass=${this.hass}></nspanel-media-control>
+            <nspanel-volume-control hass=${this.hass}></nspanel-volume-control>
+          `}
         </div>
       </div>
     `
   }
 
+  // The two water switches as room cards, with the amount and runtime lines in
+  // place of the on/off text; the timed-run buttons sit under the sprinklers.
+  renderWaterCards() {
+    const [sprinklers, hose] = WATER_SWITCHES.map((sw) => {
+      const { amount, runtime } = timerStatus(this.hass, sw.timer);
+      return { room: { ...sw, status: amount, detail: runtime } };
+    });
+    return html`
+      <div class="water-column">
+        <nspanel-button-card hass=${this.hass} room=${sprinklers}></nspanel-button-card>
+        <div class="timers">
+          ${[10, 20, 30].map((minutes) => html`
+            <nspanel-button text="${minutes} min" icon="" @click=${() => this.runLawn(minutes)}></nspanel-button>
+          `)}
+        </div>
+      </div>
+      <nspanel-button-card hass=${this.hass} room=${hose}></nspanel-button-card>
+    `
+  }
+
+  // Server-side timed run: the script turns the sprinklers on and off again itself.
+  runLawn(minutes) {
+    this.hass.callService("script", "turn_on", {
+      entity_id: `script.lawn_${minutes}_minutes`,
+    });
+  }
+
   /**
    * Convert a time string of the form "HH:MM" to a human-readable
-   * 24-hour time with AM/PM indicator.
+   * 12-hour time with AM/PM indicator.
    * @param {string} time - Time string in 24-hour format
-   * @returns {string} Time string in 24-hour format with AM/PM
+   * @returns {string} Time string in 12-hour format with AM/PM
    */
   getTime(time) {
     const [hours, minutes] = time.split(":");
-    const period = hours < 12 ? " AM" : " PM";
-    return `${hours}:${(minutes.length === 1 ? '0' : '') + minutes} ${period}`;
+    const period = hours < 12 ? "AM" : "PM";
+    return `${hours % 12 || 12}:${minutes.padStart(2, '0')} ${period}`;
   }
 
   setConfig(config) {
@@ -85,6 +123,11 @@ export class Card extends LitElement {
         flex: 1;
         height: 100%;
         padding: 24px;
+
+        /* The split background exists for the album art; the water screen is flat. */
+        &.nspanel-card--water {
+          background: var(--nspanel-surface-primary);
+        }
       }
 
       .header {
@@ -105,10 +148,21 @@ export class Card extends LitElement {
       }
 
       .button-card-grid {
+        align-items: start;
         display: grid;
         column-gap: 24px;
         grid-template-columns: 1fr 1fr;
         margin-top: 24px;
+      }
+
+      .timers {
+        column-gap: 8px;
+        display: flex;
+        margin-top: 12px;
+
+        nspanel-button {
+          flex: 1;
+        }
       }
 
       .top-section,
