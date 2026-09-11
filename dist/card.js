@@ -966,7 +966,7 @@ class $93f00a53fd0dbdfd$export$7872447382cf3226 extends (0, $ab210b2da7b39b9d$ex
         const { state: state, attributes: attributes } = this.hass.states['media_player.amplifier'];
         return (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
       <div class="nspanel-track-info">
-        <img src=${attributes.entity_picture} />
+        ${attributes.entity_picture ? (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`<img src=${attributes.entity_picture} />` : ''}
         <div class="track-info">
           <div class="title">${attributes.media_title}</div>
           <div class="artist">${attributes.media_artist}</div>
