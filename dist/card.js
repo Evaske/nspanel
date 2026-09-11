@@ -621,6 +621,7 @@ var $eb8eb2c95a750207$export$2e2bcd8739ae039 = (0, $def2de46b9306e8a$export$dbf3
 
     --nspanel-content-primary: #ffffff;
     --nspanel-content-secondary: #dfe3e8;
+    --nspanel-content-tertiary: #a3adb8;
     --nspanel-content-action: #ffffff;
     --nspanel-content-actionHover: #ffffff;
     --nspanel-content-positive: #4ccf8a;
@@ -718,7 +719,7 @@ class $17b43d96f7e32772$export$353f5b6fc5456de1 extends (0, $ab210b2da7b39b9d$ex
         super();
         this.active = false;
         this.text = 'Button Text';
-        this.icon = 'lightbulb';
+        this.icon = '';
     }
     render() {
         const classes = {
@@ -727,7 +728,7 @@ class $17b43d96f7e32772$export$353f5b6fc5456de1 extends (0, $ab210b2da7b39b9d$ex
         };
         return (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
       <div class=${(0, $ca7e425cc484d5ff$export$56cc687933817664)(classes)}>
-        <ha-icon icon="mdi:${this.icon}"></ha-icon>
+        ${this.icon ? (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`<ha-icon icon="mdi:${this.icon}"></ha-icon>` : ''}
         ${this.text}
       </div>
     `;
@@ -740,11 +741,13 @@ class $17b43d96f7e32772$export$353f5b6fc5456de1 extends (0, $ab210b2da7b39b9d$ex
         border-radius: 8px;
         color: var(--nspanel-content-action);
         column-gap: 7px;
-        display: inline-flex;
+        display: flex;
         font-size: var(--nspanel-font-small);
         font-weight: var(--nspanel-font-weight-semiBold);
         height: 36px;
+        justify-content: center;
         padding: 0 12px;
+        white-space: nowrap;
         --mdc-icon-size: 18px;
         -webkit-tap-highlight-color: transparent;
 
@@ -852,9 +855,14 @@ class $cb68961554e23e2d$export$1d45ed1062d2fff7 extends (0, $ab210b2da7b39b9d$ex
           </div>
           <nspanel-toggle-switch active=${this._state === 'on'}></nspanel-toggle-switch>
         </div>
-        <div class="footer">
+        <div class="footer ${room.status ? 'footer--stacked' : ''}">
           <span class="room-name">${this._roomName}</span>
-          <span class="state">${this._state}</span>
+          ${room.status ? (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
+            <span>${room.status}</span>
+            <span class="detail">${room.detail}</span>
+          ` : (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
+            <span class="state">${this._state}</span>
+          `}
         </div>
       </div>
     `;
@@ -892,9 +900,10 @@ class $cb68961554e23e2d$export$1d45ed1062d2fff7 extends (0, $ab210b2da7b39b9d$ex
         display: flex;
         flex-direction: column;
         font-size: var(--nspanel-font-regular);
-        height: 102px;
         justify-content: space-between;
+        min-height: 102px;
         padding: 12px;
+        row-gap: 16px;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
@@ -924,12 +933,22 @@ class $cb68961554e23e2d$export$1d45ed1062d2fff7 extends (0, $ab210b2da7b39b9d$ex
         display: flex;
         justify-content: space-between;
 
+        &.footer--stacked {
+          flex-direction: column;
+          row-gap: 2px;
+        }
+
         .room-name {
           font-weight: var(--nspanel-font-weight-semiBold);
         }
 
         .state {
           text-transform: capitalize;
+        }
+
+        .detail {
+          color: var(--nspanel-content-tertiary);
+          font-size: var(--nspanel-font-small);
         }
       }
     `;
@@ -1380,6 +1399,21 @@ const $67790e33267db729$var$VALVE_OK = [
     'ok'
 ];
 const $67790e33267db729$var$hasData = (entity)=>entity && !$67790e33267db729$var$NO_DATA.includes(String(entity.state).toLowerCase());
+// The attribute is not always populated, so fall back to scraping the state string.
+const $67790e33267db729$var$irrigationAmount = (schedule)=>{
+    if (!schedule) return undefined;
+    return schedule.attributes.actual_irrigation_amount ?? String(schedule.state || '').match(/actual_irrigation_amount['"]?\s*:\s*(\d+(?:\.\d+)?)/)?.[1];
+};
+const $67790e33267db729$export$1a8eefb3b80e4a61 = (hass, n)=>{
+    const on = hass.states[`switch.water_timer_${n}`]?.state === 'on';
+    const schedule = hass.states[`sensor.water_timer_irrigation_schedule_status_${n}`];
+    const runtime = hass.states[`sensor.water_timer_real_time_irrigation_duration_${n}`];
+    const amount = $67790e33267db729$var$irrigationAmount(schedule);
+    return {
+        amount: `${schedule && on ? 'Current' : 'Last run'}: ${amount === undefined ? '--' : `${amount} L`}`,
+        runtime: `Runtime: ${$67790e33267db729$var$hasData(runtime) ? `${runtime.state}${runtime.attributes.unit_of_measurement ?? ''}` : '--'}`
+    };
+};
 class $67790e33267db729$export$7f785ffde32b2b2f extends (0, $ab210b2da7b39b9d$export$3f2f9f5909897157) {
     static properties = {
         hass: {}
@@ -1392,12 +1426,6 @@ class $67790e33267db729$export$7f785ffde32b2b2f extends (0, $ab210b2da7b39b9d$ex
         const updateAvailable = this.hass.states['update.water_timer']?.state === 'on';
         return (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
       <div class="nspanel-water-status">
-        <div class="details">
-          ${[
-            1,
-            2
-        ].map((n)=>this.renderDetails(n))}
-        </div>
         <div class="meter">
           <div class="icon">
             <ha-icon icon="mdi:water-circle"></ha-icon>
@@ -1422,24 +1450,6 @@ class $67790e33267db729$export$7f785ffde32b2b2f extends (0, $ab210b2da7b39b9d$ex
         </div>
       </div>
     `;
-    }
-    // Amount and runtime lines for water timer `n`, laid out under its card.
-    renderDetails(n) {
-        const on = this.hass.states[`switch.water_timer_${n}`]?.state === 'on';
-        const schedule = this.hass.states[`sensor.water_timer_irrigation_schedule_status_${n}`];
-        const runtime = this.hass.states[`sensor.water_timer_real_time_irrigation_duration_${n}`];
-        const amount = this.irrigationAmount(schedule);
-        return (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
-      <div class="detail">
-        <div>${schedule && on ? 'Current' : 'Last run'}: ${amount === undefined ? '--' : `${amount} L`}</div>
-        <div>Runtime: ${$67790e33267db729$var$hasData(runtime) ? `${runtime.state}${runtime.attributes.unit_of_measurement ?? ''}` : '--'}</div>
-      </div>
-    `;
-    }
-    // The attribute is not always populated, so fall back to scraping the state string.
-    irrigationAmount(schedule) {
-        if (!schedule) return undefined;
-        return schedule.attributes.actual_irrigation_amount ?? String(schedule.state || '').match(/actual_irrigation_amount['"]?\s*:\s*(\d+(?:\.\d+)?)/)?.[1];
     }
     batteryIcon(level) {
         if (level >= 90) return 'battery';
@@ -1466,15 +1476,6 @@ class $67790e33267db729$export$7f785ffde32b2b2f extends (0, $ab210b2da7b39b9d$ex
         display: flex;
         flex: 1;
         flex-direction: column;
-      }
-
-      .details {
-        column-gap: 24px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        line-height: 1.5;
-        /* Sit 24px under the cards, like the artwork on the music screen. */
-        margin-top: -30px;
       }
 
       .meter {
@@ -1537,18 +1538,16 @@ customElements.define('nspanel-water-status', $67790e33267db729$export$7f785ffde
 
 const $bf513b85805031e6$var$WATER_SWITCHES = [
     {
-        room: {
-            name: 'Lawn Sprinklers',
-            icon: 'mdi:sprinkler-variant',
-            entity: 'switch.water_timer_1'
-        }
+        name: 'Lawn Sprinklers',
+        icon: 'mdi:sprinkler-variant',
+        entity: 'switch.water_timer_1',
+        timer: 1
     },
     {
-        room: {
-            name: 'Garden Hose',
-            icon: 'mdi:water-pump',
-            entity: 'switch.water_timer_2'
-        }
+        name: 'Garden Hose',
+        icon: 'mdi:water-pump',
+        entity: 'switch.water_timer_2',
+        timer: 2
     }
 ];
 class $bf513b85805031e6$export$60332b2344f7fe41 extends (0, $ab210b2da7b39b9d$export$3f2f9f5909897157) {
@@ -1572,7 +1571,7 @@ class $bf513b85805031e6$export$60332b2344f7fe41 extends (0, $ab210b2da7b39b9d$ex
     render() {
         const water = this.activeTab === 'water';
         return (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
-      <div class="nspanel-card">
+      <div class="nspanel-card ${water ? 'nspanel-card--water' : ''}">
         <div class="top-section">
           <div class="header">
             <div class="time">${this.getTime(this.hass.states['sensor.time'].state)}</div>
@@ -1582,7 +1581,7 @@ class $bf513b85805031e6$export$60332b2344f7fe41 extends (0, $ab210b2da7b39b9d$ex
             </div>
           </div>
           <div class="button-card-grid">
-            ${(water ? $bf513b85805031e6$var$WATER_SWITCHES : this.config.rooms).map((room)=>{
+            ${water ? this.renderWaterCards() : this.config.rooms.map((room)=>{
             return (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
                 <nspanel-button-card
                   hass=${this.hass}
@@ -1604,15 +1603,50 @@ class $bf513b85805031e6$export$60332b2344f7fe41 extends (0, $ab210b2da7b39b9d$ex
       </div>
     `;
     }
+    // The two water switches as room cards, with the amount and runtime lines in
+    // place of the on/off text; the timed-run buttons sit under the sprinklers.
+    renderWaterCards() {
+        const [sprinklers, hose] = $bf513b85805031e6$var$WATER_SWITCHES.map((sw)=>{
+            const { amount: amount, runtime: runtime } = (0, $67790e33267db729$export$1a8eefb3b80e4a61)(this.hass, sw.timer);
+            return {
+                room: {
+                    ...sw,
+                    status: amount,
+                    detail: runtime
+                }
+            };
+        });
+        return (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
+      <div class="water-column">
+        <nspanel-button-card hass=${this.hass} room=${sprinklers}></nspanel-button-card>
+        <div class="timers">
+          ${[
+            10,
+            20,
+            30
+        ].map((minutes)=>(0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
+            <nspanel-button text="${minutes} min" icon="" @click=${()=>this.runLawn(minutes)}></nspanel-button>
+          `)}
+        </div>
+      </div>
+      <nspanel-button-card hass=${this.hass} room=${hose}></nspanel-button-card>
+    `;
+    }
+    // Server-side timed run: the script turns the sprinklers on and off again itself.
+    runLawn(minutes) {
+        this.hass.callService("script", "turn_on", {
+            entity_id: `script.lawn_${minutes}_minutes`
+        });
+    }
     /**
    * Convert a time string of the form "HH:MM" to a human-readable
-   * 24-hour time with AM/PM indicator.
+   * 12-hour time with AM/PM indicator.
    * @param {string} time - Time string in 24-hour format
-   * @returns {string} Time string in 24-hour format with AM/PM
+   * @returns {string} Time string in 12-hour format with AM/PM
    */ getTime(time) {
         const [hours, minutes] = time.split(":");
-        const period = hours < 12 ? " AM" : " PM";
-        return `${hours}:${(minutes.length === 1 ? '0' : '') + minutes} ${period}`;
+        const period = hours < 12 ? "AM" : "PM";
+        return `${hours % 12 || 12}:${minutes.padStart(2, '0')} ${period}`;
     }
     setConfig(config) {
         this.config = config;
@@ -1634,6 +1668,11 @@ class $bf513b85805031e6$export$60332b2344f7fe41 extends (0, $ab210b2da7b39b9d$ex
         flex: 1;
         height: 100%;
         padding: 24px;
+
+        /* The split background exists for the album art; the water screen is flat. */
+        &.nspanel-card--water {
+          background: var(--nspanel-surface-primary);
+        }
       }
 
       .header {
@@ -1654,10 +1693,21 @@ class $bf513b85805031e6$export$60332b2344f7fe41 extends (0, $ab210b2da7b39b9d$ex
       }
 
       .button-card-grid {
+        align-items: start;
         display: grid;
         column-gap: 24px;
         grid-template-columns: 1fr 1fr;
         margin-top: 24px;
+      }
+
+      .timers {
+        column-gap: 8px;
+        display: flex;
+        margin-top: 12px;
+
+        nspanel-button {
+          flex: 1;
+        }
       }
 
       .top-section,
