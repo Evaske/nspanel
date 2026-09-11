@@ -1,84 +1,64 @@
 import { css, html, LitElement } from 'lit';
+import { classMap } from 'lit/directives/class-map.js';
 
 export class Button extends LitElement {
 
   static properties = {
-    room: {},
-    hass: {},
+    active: {},
+    text: {},
+    icon: {},
   };
 
-  render() {
-    const { room } = this.room;
-    this._roomName = room.name;
-    this._icon = room.icon;
-    this._iconColour = room.iconColour;
-    this._audioFlowDevice = room.audioFlowDevice;
-    return html`
-      <div class="nspanel-button" @click=${this.toggleButton}>
-        <div class="header">
-          <div class="room-name">${this._roomName}</div>
-          <div class="icon" style="background: #${this._iconColour}; opacity: ${this.hass.states[this._audioFlowDevice].state === "on" ? 1 : 0.5};">
-            <ha-icon icon=${this._icon} fontSize="10px"></ha-icon>
-          </div>
-        </div>
-        <div class="state">${this.hass.states[this._audioFlowDevice].state}</div>
-      </div>
-    `
+  constructor() {
+    super();
+    this.active = false;
+    this.text = 'Button Text';
+    this.icon = 'lightbulb';
   }
 
-  toggleButton() {
-    this.hass.callService("homeassistant", "toggle", {
-      entity_id: this._audioFlowDevice,
-    });
+  render() {
+    const classes = {
+      active: this.active,
+      'nspanel-button': true,
+    };
+    return html`
+      <div class=${classMap(classes)} @click=${() => console.log('clicked')}>
+        <ha-icon icon="mdi:${this.icon}"></ha-icon>
+        ${this.text}
+      </div>
+    `
   }
 
   static get styles() {
     return css`
       .nspanel-button {
-        align-items: space-between;
+        align-items: center;
         background: var(--nspanel-surface-secondary);
         border-radius: 8px;
-        box-sizing: border-box;
-        color: var(--nspanel-content-primary);
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        justify-content: space-between;
-        height: 100px;
-        padding: 12px;
+        color: var(--nspanel-content-action);
+        column-gap: 7px;
+        display: inline-flex;
+        font-size: var(--nspanel-font-small);
+        font-weight: var(--nspanel-font-weight-semiBold);
+        height: 36px;
+        padding: 0 12px;
+        --mdc-icon-size: 18px;
         -webkit-tap-highlight-color: transparent;
 
-        &:hover {
-          cursor: pointer;
+        &.active {
+          background: var(--nspanel-surface-action);
         }
-      }
 
-      .header {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
-      }
+        @media (hover: hover) {
+          &:hover {
+            background: var(--nspanel-surface-action);
+            cursor: pointer;
+          }
+        }
 
-      .room-name {
-        font-size: 12px;
-        font-weight: var(--nspanel-font-bold);
-      }
-
-      .state {
-        font-weight: var(--nspanel-font-light);
-        font-size: 32px;
-        text-transform: capitalize;
-      }
-
-      .icon {
-        align-items: center;
-        border-radius: 50%;
-        color: var(--nspanel-content-secondary);
-        display: flex;
-        height: 32px;
-        justify-content: center;
-        width: 32px;
-        --mdc-icon-size: 1.3rem;
+        &:active {
+          background: var(--nspanel-surface-action);
+        }
       }
     `;
   }
