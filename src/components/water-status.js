@@ -5,6 +5,27 @@ const VALVE_OK = ['normal', '0', 'none', 'off', 'ok'];
 
 const hasData = (entity) => entity && !NO_DATA.includes(String(entity.state).toLowerCase());
 
+// The attribute is not always populated, so fall back to scraping the state string.
+const irrigationAmount = (schedule) => {
+  if (!schedule) {
+    return undefined;
+  }
+  return schedule.attributes.actual_irrigation_amount
+    ?? String(schedule.state || '').match(/actual_irrigation_amount['"]?\s*:\s*(\d+(?:\.\d+)?)/)?.[1];
+};
+
+// Amount and runtime lines for water timer `n`, shown on its card.
+export const timerStatus = (hass, n) => {
+  const on = hass.states[`switch.water_timer_${n}`]?.state === 'on';
+  const schedule = hass.states[`sensor.water_timer_irrigation_schedule_status_${n}`];
+  const runtime = hass.states[`sensor.water_timer_real_time_irrigation_duration_${n}`];
+  const amount = irrigationAmount(schedule);
+  return {
+    amount: `${schedule && on ? 'Current' : 'Last run'}: ${amount === undefined ? '--' : `${amount} L`}`,
+    runtime: `Runtime: ${hasData(runtime) ? `${runtime.state}${runtime.attributes.unit_of_measurement ?? ''}` : '--'}`,
+  };
+};
+
 export class WaterStatus extends LitElement {
 
   static properties = {
@@ -19,9 +40,6 @@ export class WaterStatus extends LitElement {
     const updateAvailable = this.hass.states['update.water_timer']?.state === 'on';
     return html`
       <div class="nspanel-water-status">
-        <div class="details">
-          ${[1, 2].map((n) => this.renderDetails(n))}
-        </div>
         <div class="meter">
           <div class="icon">
             <ha-icon icon="mdi:water-circle"></ha-icon>
@@ -48,29 +66,6 @@ export class WaterStatus extends LitElement {
         </div>
       </div>
     `
-  }
-
-  // Amount and runtime lines for water timer `n`, laid out under its card.
-  renderDetails(n) {
-    const on = this.hass.states[`switch.water_timer_${n}`]?.state === 'on';
-    const schedule = this.hass.states[`sensor.water_timer_irrigation_schedule_status_${n}`];
-    const runtime = this.hass.states[`sensor.water_timer_real_time_irrigation_duration_${n}`];
-    const amount = this.irrigationAmount(schedule);
-    return html`
-      <div class="detail">
-        <div>${schedule && on ? 'Current' : 'Last run'}: ${amount === undefined ? '--' : `${amount} L`}</div>
-        <div>Runtime: ${hasData(runtime) ? `${runtime.state}${runtime.attributes.unit_of_measurement ?? ''}` : '--'}</div>
-      </div>
-    `
-  }
-
-  // The attribute is not always populated, so fall back to scraping the state string.
-  irrigationAmount(schedule) {
-    if (!schedule) {
-      return undefined;
-    }
-    return schedule.attributes.actual_irrigation_amount
-      ?? String(schedule.state || '').match(/actual_irrigation_amount['"]?\s*:\s*(\d+(?:\.\d+)?)/)?.[1];
   }
 
   batteryIcon(level) {
@@ -100,15 +95,6 @@ export class WaterStatus extends LitElement {
         display: flex;
         flex: 1;
         flex-direction: column;
-      }
-
-      .details {
-        column-gap: 24px;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        line-height: 1.5;
-        /* Sit 24px under the cards, like the artwork on the music screen. */
-        margin-top: -30px;
       }
 
       .meter {

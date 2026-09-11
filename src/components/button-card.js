@@ -33,9 +33,14 @@ export class ButtonCard extends LitElement {
           </div>
           <nspanel-toggle-switch active=${this._state === 'on'}></nspanel-toggle-switch>
         </div>
-        <div class="footer">
+        <div class="footer ${room.status ? 'footer--stacked' : ''}">
           <span class="room-name">${this._roomName}</span>
-          <span class="state">${this._state}</span>
+          ${room.status ? html`
+            <span>${room.status}</span>
+            <span class="detail">${room.detail}</span>
+          ` : html`
+            <span class="state">${this._state}</span>
+          `}
         </div>
       </div>
     `
@@ -77,9 +82,10 @@ export class ButtonCard extends LitElement {
         display: flex;
         flex-direction: column;
         font-size: var(--nspanel-font-regular);
-        height: 102px;
         justify-content: space-between;
+        min-height: 102px;
         padding: 12px;
+        row-gap: 16px;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none;
@@ -109,12 +115,22 @@ export class ButtonCard extends LitElement {
         display: flex;
         justify-content: space-between;
 
+        &.footer--stacked {
+          flex-direction: column;
+          row-gap: 2px;
+        }
+
         .room-name {
           font-weight: var(--nspanel-font-weight-semiBold);
         }
 
         .state {
           text-transform: capitalize;
+        }
+
+        .detail {
+          color: var(--nspanel-content-tertiary);
+          font-size: var(--nspanel-font-small);
         }
       }
     `;

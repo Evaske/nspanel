@@ -13,7 +13,7 @@ export class Button extends LitElement {
     super();
     this.active = false;
     this.text = 'Button Text';
-    this.icon = 'lightbulb';
+    this.icon = '';
   }
 
   render() {
@@ -23,7 +23,7 @@ export class Button extends LitElement {
     };
     return html`
       <div class=${classMap(classes)}>
-        <ha-icon icon="mdi:${this.icon}"></ha-icon>
+        ${this.icon ? html`<ha-icon icon="mdi:${this.icon}"></ha-icon>` : ''}
         ${this.text}
       </div>
     `
@@ -37,11 +37,13 @@ export class Button extends LitElement {
         border-radius: 8px;
         color: var(--nspanel-content-action);
         column-gap: 7px;
-        display: inline-flex;
+        display: flex;
         font-size: var(--nspanel-font-small);
         font-weight: var(--nspanel-font-weight-semiBold);
         height: 36px;
+        justify-content: center;
         padding: 0 12px;
+        white-space: nowrap;
         --mdc-icon-size: 18px;
         -webkit-tap-highlight-color: transparent;
 
