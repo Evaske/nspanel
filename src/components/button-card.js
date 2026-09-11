@@ -16,10 +16,17 @@ export class ButtonCard extends LitElement {
     const { room } = this.room;
     this._roomName = room.name;
     this._roomIcon = room.icon;
-    this._audioFlowDevice = room.audioFlowDevice;
-    this._state = this.hass.states[room.audioFlowDevice].state;
+    this._entity = room.entity ?? room.audioFlowDevice;
+    this._state = this.hass.states[this._entity].state;
     return html`
-      <div class="nspanel-button-card" @click=${() => this.toggleButton()}>
+      <div
+        class="nspanel-button-card"
+        @click=${() => this.toggleButton()}
+        @pointerdown=${() => this.startHold()}
+        @pointerup=${() => this.endHold()}
+        @pointercancel=${() => this.endHold()}
+        @contextmenu=${(e) => e.preventDefault()}
+      >
         <div class="header">
           <div class="icon">
             <ha-icon icon=${this._roomIcon}></ha-icon>
@@ -35,9 +42,29 @@ export class ButtonCard extends LitElement {
   }
 
   toggleButton() {
+    if (this._held) {
+      return;
+    }
     this.hass.callService("homeassistant", "toggle", {
-      entity_id: this._audioFlowDevice,
+      entity_id: this._entity,
     });
+  }
+
+  // Hold for 500 ms opens Home Assistant's more-info dialog instead of toggling.
+  startHold() {
+    this._held = false;
+    this._holdTimer = setTimeout(() => {
+      this._held = true;
+      this.dispatchEvent(new CustomEvent('hass-more-info', {
+        detail: { entityId: this._entity },
+        bubbles: true,
+        composed: true,
+      }));
+    }, 500);
+  }
+
+  endHold() {
+    clearTimeout(this._holdTimer);
   }
 
   static get styles() {
@@ -53,7 +80,9 @@ export class ButtonCard extends LitElement {
         height: 102px;
         justify-content: space-between;
         padding: 12px;
+        user-select: none;
         -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
 
         &:hover {
           cursor: pointer;

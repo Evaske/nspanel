@@ -6,6 +6,12 @@ import { TrackInfo } from './components/track-info';
 import { TrackPositionSlider } from './components/track-position-slider';
 import { VolumeControl } from './components/volume-control';
 import { MediaControl } from './components/media-control';
+import { WaterStatus } from './components/water-status';
+
+const WATER_SWITCHES = [
+  { room: { name: 'Lawn Sprinklers', icon: 'mdi:sprinkler-variant', entity: 'switch.water_timer_1' } },
+  { room: { name: 'Garden Hose', icon: 'mdi:water-pump', entity: 'switch.water_timer_2' } },
+];
 
 export class Card extends LitElement {
   static get properties() {
@@ -22,18 +28,19 @@ export class Card extends LitElement {
   }
 
   render() {
+    const water = this.activeTab === 'water';
     return html`
       <div class="nspanel-card">
         <div class="top-section">
           <div class="header">
             <div class="time">${this.getTime(this.hass.states['sensor.time'].state)}</div>
             <div class="tabs">
-              <nspanel-button text="Music" active=${this.activeTab === 'music'} icon="speaker"></nspanel-button>
-              <nspanel-button text="Lights" icon="lightbulb" active=${this.activeTab === 'lights'}></nspanel-button>
+              <nspanel-button text="Music" active=${!water} icon="speaker" @click=${() => this.activeTab = 'music'}></nspanel-button>
+              <nspanel-button text="Water" active=${water} icon="sprinkler-variant" @click=${() => this.activeTab = 'water'}></nspanel-button>
             </div>
           </div>
           <div class="button-card-grid">
-            ${this.config.rooms.map((room) => {
+            ${(water ? WATER_SWITCHES : this.config.rooms).map((room) => {
               return html`
                 <nspanel-button-card
                   hass=${this.hass}
@@ -44,9 +51,13 @@ export class Card extends LitElement {
           </div>
         </div>
         <div class="bottom-section">
-          <nspanel-track-info hass=${this.hass}></nspanel-track-info>
-          <nspanel-media-control hass=${this.hass}></nspanel-media-control>
-          <nspanel-volume-control hass=${this.hass}></nspanel-volume-control>
+          ${water ? html`
+            <nspanel-water-status hass=${this.hass}></nspanel-water-status>
+          ` : html`
+            <nspanel-track-info hass=${this.hass}></nspanel-track-info>
+            <nspanel-media-control hass=${this.hass}></nspanel-media-control>
+            <nspanel-volume-control hass=${this.hass}></nspanel-volume-control>
+          `}
         </div>
       </div>
     `

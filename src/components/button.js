@@ -22,7 +22,7 @@ export class Button extends LitElement {
       'nspanel-button': true,
     };
     return html`
-      <div class=${classMap(classes)} @click=${() => console.log('clicked')}>
+      <div class=${classMap(classes)}>
         <ha-icon icon="mdi:${this.icon}"></ha-icon>
         ${this.text}
       </div>

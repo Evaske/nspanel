@@ -13,6 +13,8 @@ export default css`
     --nspanel-content-secondary: #dfe3e8;
     --nspanel-content-action: #ffffff;
     --nspanel-content-actionHover: #ffffff;
+    --nspanel-content-positive: #4ccf8a;
+    --nspanel-content-negative: #f25f5c;
 
     --nspanel-font-weight-regular: 400;
     --nspanel-font-weight-medium: 500;
